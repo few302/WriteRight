@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ 萌系字体工坊 - 创造你的专属手写字体</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 背景装饰元素 -->
+    <div class="decoration">
+        <div class="bubble bubble-1">✎</div>
+        <div class="bubble bubble-2">🖋️</div>
+        <div class="bubble bubble-3">📝</div>
+        <div class="bubble bubble-4">✨</div>
+    </div>
+
+    <div class="container">
+        <!-- 页眉 -->
+        <header class="cute-header">
+            <div class="header-content">
+                <h1 class="title">
+                    <span class="title-icon">🎨</span>
+                    萌系字体工坊
+                    <span class="title-icon">✏️</span>
+                </h1>
+                <p class="subtitle">上传你的手写字符，创造超可爱的专属字体！</p>
+            </div>
+            <div class="character-mascot">
+                <div class="mascot">📚</div>
+                <div class="speech-bubble">准备好创造魔法了吗？</div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- 使用指南 -->
+            <section class="guide-section">
+                <div class="guide-card">
+                    <h2 class="guide-title">🎯 使用指南</h2>
+                    <div class="guide-steps">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>准备你的手写字符</h3>
+                                <p>在白色纸上用黑色笔写下清晰的字符</p>
+                                <div class="example-images">
+                                    <div class="example">
+                                        <div class="example-img">A</div>
+                                        <span>推荐</span>
+                                    </div>
+                                    <div class="example">
+                                        <div class="example-img bad">a</div>
+                                        <span>不推荐</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>拍照或扫描</h3>
+                                <p>确保图片清晰，背景干净</p>
+                                <ul class="tips-list">
+                                    <li>✅ 光线充足</li>
+                                    <li>✅ 背景纯白</li>
+                                    <li>✅ 字符居中</li>
+                                    <li>❌ 避免阴影</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>命名规则</h3>
+                                <p>建议用字符本身命名文件</p>
+                                <div class="naming-examples">
+                                    <code>A.jpg</code>
+                                    <code>B.png</code>
+                                    <code>1.jpg</code>
+                                    <code>感叹号.png</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 上传区域 -->
+            <section class="upload-section">
+                <div class="upload-card">
+                    <h2 class="section-title">📁 上传手写字符</h2>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <div class="upload-icon">🐾</div>
+                            <h3>拖拽图片到这里</h3>
+                            <p>或者点击选择文件</p>
+                            <div class="upload-hint">
+                                <span>支持格式: PNG, JPG, GIF, BMP</span>
+                                <span>建议上传 26+ 个字母和数字</span>
+                            </div>
+                        </div>
+                        <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                    </div>
+
+                    <!-- 文件列表 -->
+                    <div class="file-list" id="fileList">
+                        <div class="file-list-header">
+                            <span>已上传文件</span>
+                            <span id="fileCount">0 个文件</span>
+                        </div>
+                        <div class="files-container" id="filesContainer">
+                            <!-- 文件列表会动态生成在这里 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 字体设置 -->
+            <section class="settings-section">
+                <div class="settings-card">
+                    <h2 class="section-title">⚙️ 字体设置</h2>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="label-icon">🏷️</span>
+                            字体名称
+                        </label>
+                        <input type="text" id="fontName" class="cute-input" 
+                               placeholder="给你的字体起个可爱的名字吧！" 
+                               value="我的萌系字体">
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-label">
+                            <span class="label-icon">🔤</span>
+                            包含字符集
+                        </label>
+                        <div class="char-set-buttons">
+                            <button class="char-set-btn active" data-charset="basic">基础字母数字</button>
+                            <button class="char-set-btn" data-charset="extended">扩展符号</button>
+                            <button class="char-set-btn" data-charset="custom">自定义</button>
+                        </div>
+                        <textarea id="characters" class="cute-textarea" placeholder="或者手动输入需要的字符..." hidden>
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+0123456789
+</textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 生成按钮 -->
+            <section class="action-section">
+                <button id="createBtn" class="create-button">
+                    <span class="button-icon">🎀</span>
+                    生成我的可爱字体
+                    <span class="button-icon">✨</span>
+                </button>
+                
+                <div id="progress" class="progress-section" hidden>
+                    <div class="progress-info">
+                        <div class="progress-mascot">🐇</div>
+                        <div class="progress-text">
+                            <h4>魔法生成中...</h4>
+                            <p>小兔子正在努力制作你的字体！</p>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 结果区域 -->
+            <section id="resultSection" class="result-section" hidden>
+                <div class="result-card success">
+                    <div class="result-header">
+                        <div class="result-icon">🎉</div>
+                        <h2>太棒了！字体制作完成！</h2>
+                    </div>
+                    <div class="result-content">
+                        <p id="resultMessage" class="result-message"></p>
+                        <div class="result-actions">
+                            <button id="downloadBtn" class="download-button">
+                                <span class="button-icon">📥</span>
+                                下载字体文件
+                            </button>
+                            <button id="restartBtn" class="secondary-button">
+                                <span class="button-icon">🔄</span>
+                                再做一个
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="cute-footer">
+            <p>💖 用爱心制作每一个字体 | 萌系字体工坊 💖</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
