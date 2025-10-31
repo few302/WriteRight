@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>✨ 萌系字体工坊 - 创造你的专属手写字体</title>
+    <title>✍️ WriteRight - 你的手写字体生成器</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -21,11 +21,11 @@
         <header class="cute-header">
             <div class="header-content">
                 <h1 class="title">
+                    <span class="title-icon">✍️</span>
+                    WriteRight
                     <span class="title-icon">🎨</span>
-                    萌系字体工坊
-                    <span class="title-icon">✏️</span>
                 </h1>
-                <p class="subtitle">上传你的手写字符，创造超可爱的专属字体！</p>
+                <p class="subtitle">创造你的专属手写字体，让书写更美好！</p>
             </div>
             <div class="character-mascot">
                 <div class="mascot">📚</div>
@@ -74,14 +74,8 @@
                         <div class="step-item">
                             <div class="step-number">3</div>
                             <div class="step-content">
-                                <h3>命名规则</h3>
-                                <p>建议用字符本身命名文件</p>
-                                <div class="naming-examples">
-                                    <code>A.jpg</code>
-                                    <code>B.png</code>
-                                    <code>1.jpg</code>
-                                    <code>感叹号.png</code>
-                                </div>
+                                <h3>上传字符</h3>
+                                <p>点击下方对应的字符按钮，上传你的手写字符图片</p>
                             </div>
                         </div>
                     </div>
@@ -91,29 +85,66 @@
             <!-- 上传区域 -->
             <section class="upload-section">
                 <div class="upload-card">
-                    <h2 class="section-title">📁 上传手写字符</h2>
+                    <h2 class="section-title">📝 上传手写字符</h2>
+                    <p class="upload-description">请为每个字符上传对应的手写图片，建议在白纸上用黑色笔书写</p>
                     
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-content">
-                            <div class="upload-icon">🐾</div>
-                            <h3>拖拽图片到这里</h3>
-                            <p>或者点击选择文件</p>
-                            <div class="upload-hint">
-                                <span>支持格式: PNG, JPG, GIF, BMP</span>
-                                <span>建议上传 26+ 个字母和数字</span>
-                            </div>
-                        </div>
-                        <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                    <!-- 字符分类标签 -->
+                    <div class="char-categories">
+                        <button class="category-btn active" data-category="uppercase">大写字母</button>
+                        <button class="category-btn" data-category="lowercase">小写字母</button>
+                        <button class="category-btn" data-category="numbers">数字</button>
+                        <button class="category-btn" data-category="symbols">符号</button>
                     </div>
 
-                    <!-- 文件列表 -->
-                    <div class="file-list" id="fileList">
-                        <div class="file-list-header">
-                            <span>已上传文件</span>
-                            <span id="fileCount">0 个文件</span>
+                    <!-- 上传统计 -->
+                    <div class="upload-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">已上传</span>
                         </div>
-                        <div class="files-container" id="filesContainer">
-                            <!-- 文件列表会动态生成在这里 -->
+                        <div class="stat-item">
+                            <span class="stat-number">72</span>
+                            <span class="stat-label">总字符</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">0%</span>
+                            <span class="stat-label">完成度</span>
+                        </div>
+                    </div>
+
+                    <!-- 字符网格容器 -->
+                    <div class="char-grid-container">
+                        <!-- 大写字母网格 -->
+                        <div class="char-grid active" id="uppercaseGrid">
+                            <!-- A-Z 大写字母将通过JavaScript动态生成 -->
+                        </div>
+                        
+                        <!-- 小写字母网格 -->
+                        <div class="char-grid" id="lowercaseGrid">
+                            <!-- a-z 小写字母 -->
+                        </div>
+                        
+                        <!-- 数字网格 -->
+                        <div class="char-grid" id="numbersGrid">
+                            <!-- 0-9 数字 -->
+                        </div>
+                        
+                        <!-- 符号网格 -->
+                        <div class="char-grid" id="symbolsGrid">
+                            <!-- 常用符号 -->
+                        </div>
+                    </div>
+
+                    <!-- 批量上传备用选项 -->
+                    <div class="batch-upload">
+                        <h3>或者批量上传</h3>
+                        <div class="batch-upload-area" id="batchUploadArea">
+                            <div class="upload-content">
+                                <div class="upload-icon">📁</div>
+                                <p>拖拽所有图片到这里</p>
+                                <small>系统会自动根据文件名匹配字符</small>
+                            </div>
+                            <input type="file" id="batchFileInput" multiple accept="image/*" hidden>
                         </div>
                     </div>
                 </div>
@@ -131,7 +162,7 @@
                         </label>
                         <input type="text" id="fontName" class="cute-input" 
                                placeholder="给你的字体起个可爱的名字吧！" 
-                               value="我的萌系字体">
+                               value="我的WriteRight字体">
                     </div>
 
                     <div class="setting-group">
@@ -157,7 +188,7 @@ abcdefghijklmnopqrstuvwxyz
             <section class="action-section">
                 <button id="createBtn" class="create-button">
                     <span class="button-icon">🎀</span>
-                    生成我的可爱字体
+                    生成我的WriteRight字体
                     <span class="button-icon">✨</span>
                 </button>
                 
@@ -201,7 +232,7 @@ abcdefghijklmnopqrstuvwxyz
 
         <!-- 页脚 -->
         <footer class="cute-footer">
-            <p>💖 用爱心制作每一个字体 | 萌系字体工坊 💖</p>
+            <p>💖 用爱心制作每一个字体 | WriteRight 💖</p>
         </footer>
     </div>
 
