@@ -57,7 +57,7 @@ body {
 
 /* 容器 */
 .container {
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -255,21 +255,6 @@ body {
     color: #c62828;
 }
 
-.naming-examples {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-.naming-examples code {
-    background: var(--accent-yellow);
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-family: monospace;
-    color: #5a5a5a;
-}
-
 /* 上传区域 */
 .section-title {
     color: var(--primary-pink);
@@ -280,112 +265,198 @@ body {
     gap: 10px;
 }
 
-.upload-area {
-    border: 3px dashed var(--accent-blue);
-    border-radius: 20px;
-    padding: 50px 30px;
+.upload-description {
+    color: var(--text-light);
+    margin-bottom: 20px;
     text-align: center;
+}
+
+/* 字符分类标签 */
+.char-categories {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.category-btn {
+    padding: 10px 20px;
+    border: 2px solid var(--accent-blue);
+    background: white;
+    color: var(--accent-blue);
+    border-radius: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: linear-gradient(135deg, #f8fbff, #f0f8ff);
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+}
+
+.category-btn:hover {
+    background: var(--accent-blue);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.category-btn.active {
+    background: var(--primary-pink);
+    border-color: var(--primary-pink);
+    color: white;
+}
+
+/* 字符网格 */
+.char-grid-container {
+    margin-bottom: 25px;
+}
+
+.char-grid {
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
     margin-bottom: 20px;
 }
 
-.upload-area:hover {
-    border-color: var(--primary-pink);
-    background: linear-gradient(135deg, #f0f8ff, #e8f4ff);
-    transform: scale(1.02);
+.char-grid.active {
+    display: grid;
 }
 
-.upload-content .upload-icon {
-    font-size: 4rem;
-    margin-bottom: 15px;
+.char-item {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.char-item:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.char-item.uploaded {
+    border-color: var(--primary-pink);
+    background: linear-gradient(135deg, #fff9fd, #fef7ff);
+}
+
+.char-label {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    min-height: 24px;
+}
+
+.char-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 8px;
+}
+
+.char-preview.has-image {
+    background-color: white;
+    border-color: var(--primary-pink);
+}
+
+.upload-indicator {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    min-height: 16px;
+}
+
+.char-item.uploaded .upload-indicator {
+    color: var(--primary-pink);
+    font-weight: 600;
+}
+
+.char-input {
+    display: none;
+}
+
+/* 进度统计 */
+.upload-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #f0f8ff, #e3f2fd);
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 2px solid var(--accent-blue);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-pink);
     display: block;
 }
 
-.upload-content h3 {
-    color: var(--accent-purple);
-    margin-bottom: 8px;
-    font-size: 1.4rem;
-}
-
-.upload-content p {
-    color: var(--text-light);
-    margin-bottom: 15px;
-}
-
-.upload-hint {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+.stat-label {
     font-size: 0.9rem;
     color: var(--text-light);
 }
 
-/* 文件列表 */
-.file-list {
-    background: #f8f9fa;
+/* 批量上传 */
+.batch-upload {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px dashed #e2e8f0;
+}
+
+.batch-upload h3 {
+    color: var(--accent-purple);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.batch-upload-area {
+    border: 2px dashed var(--accent-yellow);
     border-radius: 15px;
-    overflow: hidden;
-}
-
-.file-list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    background: var(--accent-blue);
-    color: white;
-    font-weight: 700;
-}
-
-.files-container {
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 10px;
-}
-
-.file-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    background: white;
-    margin-bottom: 8px;
-    border-radius: 10px;
-    border: 2px solid #e9ecef;
-    transition: all 0.3s ease;
-}
-
-.file-item:hover {
-    border-color: var(--accent-blue);
-    transform: translateX(5px);
-}
-
-.file-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.file-icon {
-    font-size: 1.2rem;
-}
-
-.remove-file {
-    background: #ff6b6b;
-    color: white;
-    border: none;
-    padding: 5px 12px;
-    border-radius: 15px;
+    padding: 30px 20px;
+    text-align: center;
     cursor: pointer;
-    font-size: 0.8rem;
     transition: all 0.3s ease;
+    background: linear-gradient(135deg, #fffbf0, #fff9e6);
 }
 
-.remove-file:hover {
-    background: #ff5252;
-    transform: scale(1.1);
+.batch-upload-area:hover {
+    border-color: var(--primary-pink);
+    background: linear-gradient(135deg, #fff9e6, #fff5e1);
+}
+
+.upload-content .upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.upload-content p {
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.upload-content small {
+    color: var(--text-light);
 }
 
 /* 设置区域 */
@@ -640,6 +711,19 @@ body {
         transform: translateX(-50%);
         border: 10px solid transparent;
         border-bottom-color: var(--accent-blue);
+    }
+    
+    .char-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+    
+    .char-categories {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .category-btn {
+        width: 200px;
     }
     
     .result-actions {
