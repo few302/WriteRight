@@ -1,6 +1,6 @@
-class KawaiiFontMaker {
+class WriteRightApp {
     constructor() {
-        this.uploadedFiles = [];
+        this.uploadedFiles = new Map(); // 存储字符和文件的映射
         this.currentTaskId = null;
         this.generatedFontPath = null;
         this.init();
@@ -8,45 +8,262 @@ class KawaiiFontMaker {
 
     init() {
         this.setupEventListeners();
+        this.setupCharacterGrids();
         this.setupCharacterSets();
+        this.createNewTask();
     }
 
     setupEventListeners() {
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const createBtn = document.getElementById('createBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const restartBtn = document.getElementById('restartBtn');
+        // 字符分类切换
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchCategory(e.target.dataset.category);
+            });
+        });
 
-        // 上传区域事件
-        uploadArea.addEventListener('click', () => fileInput.click());
+        // 批量上传
+        const batchUploadArea = document.getElementById('batchUploadArea');
+        const batchFileInput = document.getElementById('batchFileInput');
         
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.background = 'linear-gradient(135deg, #e3f2fd, #bbdefb)';
-            uploadArea.style.borderColor = 'var(--primary-pink)';
+        batchUploadArea.addEventListener('click', () => batchFileInput.click());
+        batchUploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+        batchUploadArea.addEventListener('drop', this.handleBatchDrop.bind(this));
+        batchFileInput.addEventListener('change', (e) => this.handleBatchFiles(e.target.files));
+
+        // 生成按钮
+        document.getElementById('createBtn').addEventListener('click', () => this.createFont());
+        
+        // 下载和重新开始按钮
+        document.getElementById('downloadBtn').addEventListener('click', () => this.downloadFont());
+        document.getElementById('restartBtn').addEventListener('click', () => this.restartProcess());
+    }
+
+    setupCharacterGrids() {
+        // 定义字符集
+        const characterSets = {
+            uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            lowercase: 'abcdefghijklmnopqrstuvwxyz',
+            numbers: '0123456789',
+            symbols: '.,!?;:-+*/='
+        };
+
+        // 为每个字符集创建网格
+        Object.entries(characterSets).forEach(([category, chars]) => {
+            const grid = document.getElementById(`${category}Grid`);
+            grid.innerHTML = '';
+            
+            for (let char of chars) {
+                const charItem = this.createCharItem(char);
+                grid.appendChild(charItem);
+            }
         });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.background = 'linear-gradient(135deg, #f8fbff, #f0f8ff)';
-            uploadArea.style.borderColor = 'var(--accent-blue)';
+        // 更新总字符数统计（大写26 + 小写26 + 数字10 + 符号10 = 72）
+        this.updateUploadStats();
+    }
+
+    createCharItem(char) {
+        const charItem = document.createElement('div');
+        charItem.className = 'char-item';
+        charItem.innerHTML = `
+            <div class="char-label">${char}</div>
+            <div class="char-preview"></div>
+            <div class="upload-indicator">点击上传</div>
+            <input type="file" class="char-input" accept="image/*" data-char="${char}">
+        `;
+
+        // 添加点击事件
+        charItem.addEventListener('click', () => {
+            const fileInput = charItem.querySelector('.char-input');
+            fileInput.click();
         });
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.background = 'linear-gradient(135deg, #f8fbff, #f0f8ff)';
-            uploadArea.style.borderColor = 'var(--accent-blue)';
-            this.handleFiles(e.dataTransfer.files);
-        });
-
+        // 文件选择事件
+        const fileInput = charItem.querySelector('.char-input');
         fileInput.addEventListener('change', (e) => {
-            this.handleFiles(e.target.files);
+            if (e.target.files[0]) {
+                this.handleCharUpload(char, e.target.files[0], charItem);
+            }
         });
 
-        // 按钮事件
-        createBtn.addEventListener('click', () => this.createFont());
-        downloadBtn.addEventListener('click', () => this.downloadFont());
-        restartBtn.addEventListener('click', () => this.restartProcess());
+        return charItem;
+    }
+
+    async handleCharUpload(char, file, charItem) {
+        // 显示预览
+        const preview = charItem.querySelector('.char-preview');
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            preview.style.backgroundImage = `url(${e.target.result})`;
+            preview.classList.add('has-image');
+            charItem.classList.add('uploaded');
+            charItem.querySelector('.upload-indicator').textContent = '已上传';
+        };
+        reader.readAsDataURL(file);
+
+        // 存储文件
+        this.uploadedFiles.set(char, file);
+        
+        // 更新统计
+        this.updateUploadStats();
+        
+        // 上传到服务器
+        await this.uploadToServer(char, file);
+        
+        this.showTemporaryMessage(`字符 "${char}" 上传成功！`, 'success');
+    }
+
+    async uploadToServer(char, file) {
+        if (!this.currentTaskId) {
+            await this.createNewTask();
+        }
+
+        const formData = new FormData();
+        formData.append('char', char);
+        formData.append('file', file);
+        formData.append('task_id', this.currentTaskId);
+
+        try {
+            const response = await fetch('/upload_char', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || '上传失败');
+            }
+
+            console.log(`✅ 字符 ${char} 上传成功`);
+        } catch (error) {
+            console.error(`❌ 字符 ${char} 上传失败:`, error);
+            this.showTemporaryMessage(`字符 "${char}" 上传失败: ${error.message}`, 'error');
+            
+            // 回滚UI状态
+            this.uploadedFiles.delete(char);
+            this.updateUploadStats();
+            
+            // 重置UI
+            const charItem = this.findCharItem(char);
+            if (charItem) {
+                charItem.classList.remove('uploaded');
+                const preview = charItem.querySelector('.char-preview');
+                preview.style.backgroundImage = '';
+                preview.classList.remove('has-image');
+                charItem.querySelector('.upload-indicator').textContent = '点击上传';
+            }
+        }
+    }
+
+    async createNewTask() {
+        try {
+            const response = await fetch('/create_task', {
+                method: 'POST'
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.currentTaskId = result.task_id;
+                console.log('🎉 创建新任务:', this.currentTaskId);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('❌ 创建任务失败:', error);
+            this.showTemporaryMessage('创建任务失败，请刷新页面重试', 'error');
+        }
+    }
+
+    switchCategory(category) {
+        // 更新激活的按钮
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.category === category);
+        });
+
+        // 显示对应的网格
+        document.querySelectorAll('.char-grid').forEach(grid => {
+            grid.classList.toggle('active', grid.id === `${category}Grid`);
+        });
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.style.background = 'linear-gradient(135deg, #fff5e1, #ffecb3)';
+    }
+
+    handleBatchDrop(e) {
+        e.preventDefault();
+        e.currentTarget.style.background = 'linear-gradient(135deg, #fff9e6, #fff5e1)';
+        this.handleBatchFiles(e.dataTransfer.files);
+    }
+
+    async handleBatchFiles(files) {
+        const imageFiles = Array.from(files).filter(file => 
+            file.type.startsWith('image/')
+        );
+
+        if (imageFiles.length === 0) {
+            this.showTemporaryMessage('请选择有效的图片文件！', 'error');
+            return;
+        }
+
+        let processedCount = 0;
+        
+        for (let file of imageFiles) {
+            // 从文件名推断字符（去掉扩展名）
+            const char = file.name.split('.')[0];
+            
+            if (char && char.length === 1) {
+                // 找到对应的字符元素
+                const charItem = this.findCharItem(char);
+                if (charItem) {
+                    await this.handleCharUpload(char, file, charItem);
+                    processedCount++;
+                }
+            }
+        }
+
+        this.showTemporaryMessage(`批量处理完成！成功匹配 ${processedCount} 个字符`, 'success');
+    }
+
+    findCharItem(char) {
+        // 在所有网格中查找对应的字符元素
+        const allCharItems = document.querySelectorAll('.char-item');
+        for (let item of allCharItems) {
+            const charLabel = item.querySelector('.char-label').textContent;
+            if (charLabel === char) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    updateUploadStats() {
+        const totalChars = 72; // 大写26 + 小写26 + 数字10 + 符号10
+        const uploadedChars = this.uploadedFiles.size;
+        const progress = Math.round((uploadedChars / totalChars) * 100);
+
+        // 更新统计显示
+        const statsElement = document.querySelector('.upload-stats');
+        if (statsElement) {
+            statsElement.innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-number">${uploadedChars}</span>
+                    <span class="stat-label">已上传</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${totalChars}</span>
+                    <span class="stat-label">总字符</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${progress}%</span>
+                    <span class="stat-label">完成度</span>
+                </div>
+            `;
+        }
     }
 
     setupCharacterSets() {
@@ -58,6 +275,11 @@ class KawaiiFontMaker {
             extended: `ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789\n.,!?;:- ()[]{}`,
             custom: ''
         };
+
+        // 设置默认激活基础字符集
+        charSetButtons[0].classList.add('active');
+        textarea.value = characterSets.basic;
+        textarea.hidden = true;
 
         charSetButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -80,103 +302,18 @@ class KawaiiFontMaker {
         });
     }
 
-    handleFiles(files) {
-        const imageFiles = Array.from(files).filter(file => {
-            const isValidType = file.type.startsWith('image/');
-            if (!isValidType) {
-                this.showTemporaryMessage('只能上传图片文件哦！', 'error');
-                return false;
-            }
-            return true;
-        });
-
-        if (imageFiles.length === 0) {
-            this.showTemporaryMessage('请选择有效的图片文件！', 'error');
-            return;
-        }
-
-        // 检查文件数量
-        if (this.uploadedFiles.length + imageFiles.length > 100) {
-            this.showTemporaryMessage('一次最多上传100个文件哦！', 'error');
-            return;
-        }
-
-        this.uploadedFiles = [...this.uploadedFiles, ...imageFiles];
-        this.updateFileList();
-        this.uploadToServer(imageFiles);
-        
-        this.showTemporaryMessage(`成功添加 ${imageFiles.length} 个文件！`, 'success');
-    }
-
-    updateFileList() {
-        const filesContainer = document.getElementById('filesContainer');
-        const fileCount = document.getElementById('fileCount');
-        
-        filesContainer.innerHTML = '';
-        fileCount.textContent = `${this.uploadedFiles.length} 个文件`;
-
-        this.uploadedFiles.forEach((file, index) => {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'file-item';
-            fileItem.innerHTML = `
-                <div class="file-info">
-                    <span class="file-icon">📄</span>
-                    <span>${file.name}</span>
-                </div>
-                <button class="remove-file" onclick="app.removeFile(${index})">
-                    🗑️ 删除
-                </button>
-            `;
-            filesContainer.appendChild(fileItem);
-        });
-
-        // 显示/隐藏文件列表
-        const fileList = document.getElementById('fileList');
-        fileList.style.display = this.uploadedFiles.length > 0 ? 'block' : 'none';
-    }
-
-    removeFile(index) {
-        this.uploadedFiles.splice(index, 1);
-        this.updateFileList();
-        this.showTemporaryMessage('文件已删除', 'info');
-    }
-
-    async uploadToServer(files) {
-        const formData = new FormData();
-        files.forEach(file => formData.append('files', file));
-
-        try {
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                this.currentTaskId = result.task_id;
-                console.log('🎉 上传成功:', result.message);
-            } else {
-                throw new Error(result.error);
-            }
-        } catch (error) {
-            console.error('❌ 上传失败:', error);
-            this.showTemporaryMessage('上传失败: ' + error.message, 'error');
-        }
-    }
-
     async createFont() {
         if (!this.currentTaskId) {
             this.showTemporaryMessage('请先上传手写图片！', 'error');
             return;
         }
 
-        if (this.uploadedFiles.length < 5) {
+        if (this.uploadedFiles.size < 5) {
             this.showTemporaryMessage('建议至少上传5个字符以获得更好的效果！', 'warning');
             // 继续执行，不阻止
         }
 
-        const fontName = document.getElementById('fontName').value.trim() || '我的萌系字体';
+        const fontName = document.getElementById('fontName').value.trim() || '我的WriteRight字体';
         const characters = document.getElementById('characters').value;
 
         const createBtn = document.getElementById('createBtn');
@@ -216,17 +353,18 @@ class KawaiiFontMaker {
             if (response.ok) {
                 setTimeout(() => {
                     this.showResult(result);
+                    progressSection.hidden = true;
                 }, 800);
             } else {
-                throw new Error(result.error);
+                throw new Error(result.error || '生成失败');
             }
         } catch (error) {
             clearInterval(progressInterval);
             console.error('❌ 生成失败:', error);
             this.showTemporaryMessage('生成失败: ' + error.message, 'error');
+            progressSection.hidden = true;
         } finally {
             createBtn.disabled = false;
-            progressSection.hidden = true;
         }
     }
 
@@ -235,7 +373,7 @@ class KawaiiFontMaker {
         const message = document.getElementById('resultMessage');
 
         resultSection.hidden = false;
-        message.textContent = result.message || '你的专属字体已经制作完成啦！快下载试试吧！';
+        message.textContent = result.message || '你的WriteRight字体已经制作完成啦！快下载试试吧！';
         
         this.generatedFontPath = result.font_path;
 
@@ -253,13 +391,25 @@ class KawaiiFontMaker {
 
     restartProcess() {
         // 重置界面
-        this.uploadedFiles = [];
+        this.uploadedFiles.clear();
         this.currentTaskId = null;
         this.generatedFontPath = null;
         
+        // 重置所有字符项
+        document.querySelectorAll('.char-item').forEach(item => {
+            item.classList.remove('uploaded');
+            const preview = item.querySelector('.char-preview');
+            preview.style.backgroundImage = '';
+            preview.classList.remove('has-image');
+            item.querySelector('.upload-indicator').textContent = '点击上传';
+        });
+        
         document.getElementById('fileList').style.display = 'none';
         document.getElementById('resultSection').hidden = true;
-        document.getElementById('fontName').value = '我的萌系字体';
+        document.getElementById('fontName').value = '我的WriteRight字体';
+        
+        this.updateUploadStats();
+        this.createNewTask();
         
         this.showTemporaryMessage('准备好创造新的字体了吗？', 'info');
         
@@ -315,11 +465,11 @@ class KawaiiFontMaker {
 }
 
 // 创建应用实例
-const app = new KawaiiFontMaker();
+const app = new WriteRightApp();
 
-// 添加一些初始化提示
+// 添加欢迎消息
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
-        app.showTemporaryMessage('欢迎来到萌系字体工坊！✨', 'info');
+        app.showTemporaryMessage('欢迎使用 WriteRight！✨ 开始上传你的手写字符吧！', 'info');
     }, 1000);
 });
